@@ -1,0 +1,40 @@
+@config{
+    name = "Midi";
+    endian = "big endian";
+}
+
+@type MThd {
+    magic string 4
+    headerLen int32;
+   	trackType int16;
+   	trackCount int16;
+   	tick int16;
+};
+
+@type MTrk {
+    magic string 4;
+    len int32;
+    data {data MTrkData [*]} $len;
+}
+
+@type MTrkData {
+    @type Data{
+        stop        {sym int8;delay int8;} [(($code&0xf0)==0x80)];
+        start       {sym int8;vol int8;} [(($code&0xf0)==0x90)];
+        restart     {sym int8;vol int8;} [(($code&0xf0)==0xa0)];
+        controller  {handle int8;id int8;} [(($code&0xf0)==0xb0)];
+        instrument  int8 [(($code&0xf0)==0xc0)];
+    }
+    @type SysData{
+        subCode int8;
+        len leb;
+        str string $len;
+    }
+    time leb;
+    code int8;
+    data Data[$code!=0xff];
+    sysData SysData[$code==0xff];
+}
+
+header MThd;
+track MTrk[$header.trackCount];
